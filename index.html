@@ -170,12 +170,24 @@
   .deck.on .record { animation-play-state: running; }
   .deck.on .arm { transform: rotate(30deg); }
   .deck.on .lamp { fill: var(--fluorescent); }
+  .deck.on.cue .arm { transform: rotate(14deg); transition-duration: .35s; } /* lift the needle back to the outer groove */
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  .controls { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; }
   .volume {
     display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px;
+    min-width: 0;
     font-size: .62rem; letter-spacing: .24em; color: var(--ash);
   }
+  .restart {
+    width: 22px; height: 22px; padding: 0;
+    display: grid; place-items: center;
+    background: none; border: 1px solid rgb(141 154 148 / .4); border-radius: 50%;
+    color: var(--ash); cursor: pointer;
+    transition: color .2s, border-color .2s;
+  }
+  .restart svg { width: 12px; height: 12px; }
+  .restart:hover, .restart:focus-visible { color: var(--fluorescent); border-color: var(--fluorescent); outline: none; }
   .volume input {
     -webkit-appearance: none; appearance: none;
     width: 100%; min-width: 0; height: 18px; margin: 0;
@@ -195,6 +207,17 @@
     color: var(--ash); transition: opacity .6s ease;
   }
   .deck.played .deck-hint { opacity: 0; }
+  .now-playing {
+    position: absolute; right: 0; bottom: 100%; margin-bottom: 10px;
+    display: grid; justify-items: end; gap: 2px;
+    white-space: nowrap; text-align: right;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity .8s ease, transform .8s ease;
+    pointer-events: none;
+  }
+  .now-playing .genre { font-size: .58rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ash); }
+  .now-playing .song { font-family: var(--display); font-style: italic; font-size: 1rem; color: var(--fluorescent); }
+  .deck.on .now-playing { opacity: 1; transform: none; }
 
   @media (max-width: 600px) {
     .deck { width: 92px; }
@@ -227,7 +250,8 @@
 
     <div class="deck" id="deck">
       <span class="deck-hint" aria-hidden="true">Play the record</span>
-      <button class="turntable" id="turntable" type="button" aria-pressed="false" aria-label="Play music: Midnight Ashes">
+      <p class="now-playing" aria-live="polite"><span class="genre">Chicago Blues</span><span class="song">Midnight Ashes</span></p>
+      <button class="turntable" id="turntable" type="button" aria-pressed="false" aria-label="Play music: Chicago Blues, Midnight Ashes">
         <svg viewBox="0 0 120 96" aria-hidden="true">
           <defs>
             <linearGradient id="walnut" x1="0" y1="0" x2="1" y2="1">
@@ -259,9 +283,14 @@
           <circle class="lamp" cx="108" cy="84" r="2.6"/>
         </svg>
       </button>
-      <label class="volume" for="volume">VOL
-        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.6">
-      </label>
+      <div class="controls">
+        <label class="volume" for="volume">VOL
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.6">
+        </label>
+        <button class="restart" id="restart" type="button" aria-label="Restart the song from the beginning" title="Restart">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a4.5 4.5 0 1 0 1.4-3.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4.6 1.8v3.2h3.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
     </div>
   </section>
 </main>
@@ -348,7 +377,7 @@
   onScroll();
 })();
 
-// Background music: "Midnight Ashes", looping without end, started from the record player.
+// Background music: "Chicago Blues: Midnight Ashes", looping without end, started from the record player.
 (() => {
   const deck = document.getElementById('deck');
   const button = document.getElementById('turntable');
@@ -389,7 +418,7 @@
     on = next;
     deck.classList.toggle('on', on);
     button.setAttribute('aria-pressed', String(on));
-    button.setAttribute('aria-label', (on ? 'Stop' : 'Play') + ' music: Midnight Ashes');
+    button.setAttribute('aria-label', (on ? 'Stop' : 'Play') + ' music: Chicago Blues, Midnight Ashes');
     clearTimeout(stopTimer);
     if (on) {
       deck.classList.add('played');
@@ -404,6 +433,14 @@
   }
 
   button.addEventListener('click', () => setOn(!on));
+
+  // Back to the first groove: the needle lifts, the song rewinds, and it plays from the top.
+  document.getElementById('restart').addEventListener('click', () => {
+    audio.currentTime = 0;
+    if (!on) { setOn(true); return; }
+    deck.classList.add('cue');
+    setTimeout(() => deck.classList.remove('cue'), 380);
+  });
   slider.addEventListener('input', () => {
     if (on) fadeTo(level(), 0.08);
     try { localStorage.setItem('blair-volume', slider.value); } catch (e) {}
