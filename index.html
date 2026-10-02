@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nighthawks for Blair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,400&family=Courier+Prime&display=swap">
+<style>
+  /* Layout: one sticky screen; the film is the page and scroll is its playhead. Dark night palette taken from Hopper's street. */
+  :root {
+    --night: #0c1513;       /* the street at 2 a.m. */
+    --glass: #1d3b36;       /* green diner glass */
+    --fluorescent: #f1e7a8; /* the diner's yellow light */
+    --brick: #b4452f;       /* the Phillies sign / woman's dress */
+    --ash: #8d9a94;         /* quiet captions */
+    --display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+    --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  html, body { background: var(--night); color: var(--fluorescent); }
+  body { margin: 0; font-family: var(--mono); }
+
+  .track { height: 700vh; position: relative; }
+  .stage {
+    position: sticky; top: 0;
+    height: 100vh; height: 100dvh;
+    display: grid; place-items: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, var(--glass) 0%, var(--night) 62%);
+  }
+  .frame {
+    position: relative;
+    height: 100%;
+    aspect-ratio: 9 / 16;
+    max-width: 100%;
+  }
+  video, .frame img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* soften the film's edges into the night on wide screens */
+  .frame::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 60px 30px var(--night);
+  }
+  .scrim {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, rgb(12 21 19 / .78) 0%, rgb(12 21 19 / .2) 42%, transparent 60%);
+    opacity: 0; transition: opacity 1.4s ease;
+  }
+
+  .greeting {
+    position: absolute; left: 0; right: 0; top: 13%;
+    padding-inline: 24px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .greeting .line1 {
+    display: block;
+    font-family: var(--display); font-style: italic; font-weight: 400;
+    font-size: clamp(2.1rem, 6.4vh, 3.6rem);
+    line-height: 1.05;
+    letter-spacing: .01em;
+    text-wrap: balance;
+  }
+  .greeting .line2 {
+    display: block;
+    margin-top: .2em;
+    font-family: var(--display); font-weight: 500;
+    font-size: clamp(3rem, 10vh, 5.6rem);
+    letter-spacing: .14em;
+    padding-left: .14em; /* re-centre tracked caps */
+    text-transform: uppercase;
+    color: var(--fluorescent);
+  }
+  .greeting .ch {
+    display: inline-block;
+    opacity: 0; transform: translateY(.35em); filter: blur(6px);
+    transition: opacity .9s ease, transform 1.1s cubic-bezier(.2,.7,.2,1), filter 1.1s ease;
+    transition-delay: calc(var(--i) * 45ms);
+  }
+  .greeting .ch.sp { width: .28em; }
+  .sign {
+    display: block; margin-top: 1.1rem;
+    font-size: .78rem; letter-spacing: .32em; text-transform: uppercase;
+    color: var(--ash);
+    opacity: 0; transition: opacity 1.2s ease 1.6s;
+  }
+
+  .is-end .scrim { opacity: 1; }
+  .is-end .greeting .ch { opacity: 1; transform: none; filter: none; }
+  .is-end .greeting .line2 .ch {
+    text-shadow: 0 0 18px rgb(241 231 168 / .55), 0 0 48px rgb(180 69 47 / .45);
+    animation: hum 5s 1.4s infinite;
+  }
+  .is-end .sign { opacity: 1; }
+  @keyframes hum {
+    0%, 91%, 100% { opacity: 1; }
+    92% { opacity: .55; } 93% { opacity: 1; } 95% { opacity: .7; } 96% { opacity: 1; }
+  }
+
+  .hint, .again, .clock {
+    position: absolute; z-index: 2;
+    font-size: .72rem; letter-spacing: .28em; text-transform: uppercase;
+    color: var(--ash);
+  }
+  .hint {
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; text-align: center;
+    transition: opacity .6s ease;
+  }
+  .hint::after {
+    content: ""; display: block; width: 1px; height: 34px; margin: 12px auto 0;
+    background: linear-gradient(var(--ash), transparent);
+    animation: drip 2.2s ease-in-out infinite;
+    transform-origin: top;
+  }
+  @keyframes drip { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+  .scrolled .hint { opacity: 0; }
+
+  .clock {
+    top: calc(20px + env(safe-area-inset-top, 0px)); left: 20px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .2em;
+  }
+  .progress {
+    position: absolute; z-index: 2; left: 0; bottom: 0; height: 2px; width: 100%;
+    background: var(--brick); transform-origin: left; transform: scaleX(0);
+    opacity: .8;
+  }
+
+  .again {
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+    background: none; border: 1px solid rgb(141 154 148 / .4); border-radius: 999px;
+    font-family: var(--mono); padding: .7em 1.4em; cursor: pointer;
+    opacity: 0; pointer-events: none; transition: opacity 1s ease 2.4s, color .2s, border-color .2s;
+  }
+  .is-end .again { opacity: 1; pointer-events: auto; }
+  .again:hover, .again:focus-visible { color: var(--fluorescent); border-color: var(--fluorescent); outline: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .greeting .ch { transition: opacity .6s ease; transform: none; filter: none; }
+    .is-end .greeting .line2 .ch { animation: none; }
+    .hint::after { animation: none; }
+  }
+</style>
+
+<main class="track" id="track">
+  <section class="stage" id="stage" aria-label="Nighthawks, scrubbed by scrolling">
+    <div class="frame">
+      <img src="media/poster.jpg" alt="" aria-hidden="true">
+      <video id="film" src="media/nighthawks-scrub.mp4" poster="media/poster.jpg" muted playsinline preload="auto" aria-label="An animated walk into Edward Hopper's Nighthawks"></video>
+      <div class="scrim"></div>
+      <h1 class="greeting" id="greeting" aria-label="Happy Birthday Blair!">
+        <span class="line1" data-text="Happy Birthday"></span>
+        <span class="line2" data-text="Blair!"></span>
+        <span class="sign">Open all night · for you</span>
+      </h1>
+    </div>
+    <span class="clock" id="clock" aria-hidden="true">11:47 PM</span>
+    <p class="hint">Scroll to step inside</p>
+    <button class="again" id="again" type="button">Once more</button>
+    <div class="progress" id="progress"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const film = document.getElementById('film');
+  const stage = document.getElementById('stage');
+  const track = document.getElementById('track');
+  const progress = document.getElementById('progress');
+  const clock = document.getElementById('clock');
+  const again = document.getElementById('again');
+
+  // split the greeting into letters for the staggered reveal
+  let i = 0;
+  document.querySelectorAll('#greeting [data-text]').forEach(el => {
+    for (const c of el.dataset.text) {
+      const s = document.createElement('span');
+      s.className = c === ' ' ? 'ch sp' : 'ch';
+      s.textContent = c === ' ' ? ' ' : c;
+      s.style.setProperty('--i', i++);
+      s.setAttribute('aria-hidden', 'true');
+      el.appendChild(s);
+    }
+  });
+
+  // The film plays across the first 86% of the scroll; the rest holds the last frame for the greeting.
+  const FILM_SHARE = 0.86;
+  let duration = 0, target = 0, shown = 0;
+
+  // Load the whole file into memory so seeking is instant (and works on iOS).
+  fetch(film.currentSrc || film.src)
+    .then(r => r.ok ? r.blob() : Promise.reject())
+    .then(b => { film.src = URL.createObjectURL(b); })
+    .catch(() => {});
+
+  film.addEventListener('loadedmetadata', () => { duration = film.duration; onScroll(); });
+
+  function scrollProgress() {
+    const max = track.offsetHeight - innerHeight;
+    return max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
+  }
+
+  function onScroll() {
+    const p = scrollProgress();
+    const f = Math.min(1, p / FILM_SHARE);
+    target = f * Math.max(0, duration - 0.05);
+    progress.style.transform = `scaleX(${p})`;
+    document.body.classList.toggle('scrolled', p > 0.01);
+    stage.classList.toggle('is-end', p > 0.93);
+    // the diner clock creeps from 11:47 PM toward midnight
+    const mins = 47 + Math.round(f * 13);
+    clock.textContent = mins >= 60 ? '12:00 AM' : `11:${String(mins).padStart(2, '0')} PM`;
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  // ease the playhead toward the scroll target
+  (function tick() {
+    if (duration) {
+      shown += (target - shown) * 0.18;
+      if (Math.abs(target - shown) < 0.002) shown = target;
+      if (!film.seeking && Math.abs(film.currentTime - shown) > 0.015) film.currentTime = shown;
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  // The last frame matches the first, so jumping back to the top is a seamless loop.
+  again.addEventListener('click', () => {
+    shown = target = 0;
+    film.currentTime = 0;
+    scrollTo({ top: 0, behavior: 'instant' });
+  });
+
+  // iOS needs a gesture before it will paint seeked frames
+  addEventListener('touchstart', () => { film.play().then(() => film.pause()).catch(() => {}); }, { once: true, passive: true });
+
+  onScroll();
+})();
+</script>
