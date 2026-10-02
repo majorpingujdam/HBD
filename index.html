@@ -250,8 +250,8 @@
 
     <div class="deck" id="deck">
       <span class="deck-hint" aria-hidden="true">Play the record</span>
-      <p class="now-playing" aria-live="polite"><span class="genre">Chicago Blues</span><span class="song">Midnight Ashes</span></p>
-      <button class="turntable" id="turntable" type="button" aria-pressed="false" aria-label="Play music: Chicago Blues, Midnight Ashes">
+      <p class="now-playing" aria-live="polite"><span class="genre">Lofi</span><span class="song">Pac Man</span></p>
+      <button class="turntable" id="turntable" type="button" aria-pressed="false" aria-label="Play music: Pac Man Lofi">
         <svg viewBox="0 0 120 96" aria-hidden="true">
           <defs>
             <linearGradient id="walnut" x1="0" y1="0" x2="1" y2="1">
@@ -377,12 +377,12 @@
   onScroll();
 })();
 
-// Background music: "Chicago Blues: Midnight Ashes", looping without end, started from the record player.
+// Background music: "Pac Man Lofi", looping without end, started from the record player.
 (() => {
   const deck = document.getElementById('deck');
   const button = document.getElementById('turntable');
   const slider = document.getElementById('volume');
-  const audio = new Audio('media/midnight-ashes.mp3');
+  const audio = new Audio('media/pac-man-lofi.mp3');
   audio.loop = true;
   audio.preload = 'auto';
 
@@ -418,7 +418,7 @@
     on = next;
     deck.classList.toggle('on', on);
     button.setAttribute('aria-pressed', String(on));
-    button.setAttribute('aria-label', (on ? 'Stop' : 'Play') + ' music: Chicago Blues, Midnight Ashes');
+    button.setAttribute('aria-label', (on ? 'Stop' : 'Play') + ' music: Pac Man Lofi');
     clearTimeout(stopTimer);
     if (on) {
       deck.classList.add('played');
